@@ -8,15 +8,26 @@ The goal is to make requirements loading light without blocking page load and to
 
 Supports Silverstripe 4.0+
 
-## Usage
+## Usage example
+```
+use SilverStripe\View\Requirements;
+use NSWDPC\AsyncLoader\Backend as AsyncRequirementsBackend;
+```
 
 ```
 $backend = new AsyncRequirementsBackend();
 Requirements::set_backend($backend);
 
+// load requirements in the default bundle (blocking)
 Requirements::javascript('path/to/some/requirement.js');
 Requirements::javascript('https://example.com/lib_depending_on_requirement.js');
 Requirements::javascript('//example.com/load_over_current_protocol.js');
+
+// block requirements as usual
+Requirements::block('/something_you_want_to_block.js');
+
+// create a specific bundle
+$backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js']);
 ```
 
 ## Bundles
