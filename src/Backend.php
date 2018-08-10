@@ -162,12 +162,11 @@ JAVASCRIPT;
 	 * requirements. Needs to receive a valid HTML/XHTML template in the $content parameter,
 	 * including a head and body tag.
 	 *
-	 * @param string $templateFile No longer used, only retained for compatibility
 	 * @param string $content      HTML content that has already been parsed from the $templateFile
 	 *                             through {@link SSViewer}
 	 * @return string HTML content augmented with the requirements tags
 	 */
-	public function includeInHTML($templateFile, $content) {
+	public function includeInHTML($content) {
 		if(
 			(strpos($content, '</head>') !== false || strpos($content, '</head ') !== false)
 			&& ($this->css || $this->javascript || $this->customCSS || $this->customScript || $this->customHeadTags)
@@ -178,12 +177,12 @@ JAVASCRIPT;
 			$script_requirements = '';
 
 			// Combine files - updates $this->javascript and $this->css
-			$this->process_combined_files();
+			$this->processCombinedFiles();
 
 			// Collect script paths
 			$script_paths = [];
 			foreach(array_diff_key($this->javascript,$this->blocked) as $file => $dummy) {
-				$script_paths[] = Convert::raw2xml($this->path_for_file($file));
+				$script_paths[] = Convert::raw2xml($this->pathForFile($file));
 			}
 
 			// load the loader
@@ -197,7 +196,7 @@ JAVASCRIPT;
 
 			// Blocking CSS by default
 			foreach(array_diff_key($this->css,$this->blocked) as $file => $params) {
-				$path = Convert::raw2xml($this->path_for_file($file));
+				$path = Convert::raw2xml($this->pathForFile($file));
 				if($path) {
 					$media = (isset($params['media']) && !empty($params['media'])) ? " media=\"{$params['media']}\"" : "";
 
