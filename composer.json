@@ -1,6 +1,6 @@
 {
   "name": "nswdpc/silverstripe-async-loader",
-  "description": "An asynchronous assets loader for Silverstripe 4",
+  "description": "An asynchronous assets loader for Silverstripe 4 using loadjs",
   "type": "silverstripe-vendormodule",
   "keywords": [
     "silverstripe",
