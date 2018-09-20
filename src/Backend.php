@@ -183,7 +183,7 @@ JAVASCRIPT;
 			// Collect script paths
 			$script_paths = [];
 			foreach(array_diff_key($this->javascript,$this->blocked) as $file => $dummy) {
-				$script_paths[] = Convert::raw2xml($this->pathForFile($file));
+				$script_paths[] = $this->pathForFile($file);
 			}
 
 			// load the loader
@@ -197,7 +197,7 @@ JAVASCRIPT;
 
 			// Blocking CSS by default
 			foreach(array_diff_key($this->css,$this->blocked) as $file => $params) {
-				$path = Convert::raw2xml($this->pathForFile($file));
+				$path = $this->pathForFile($file);
 				if($path) {
 					$media = (isset($params['media']) && !empty($params['media'])) ? " media=\"{$params['media']}\"" : "";
 
