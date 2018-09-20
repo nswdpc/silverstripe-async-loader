@@ -75,8 +75,6 @@ JAVASCRIPT;
 		$loader_scripts .= "var loadjs_ready_{$this->bundle_name} = function() {\n";
 		// dispatch the event when the bundle_name has loaded successfully
 		$loader_scripts .= $this->bundleDispatch($this->bundle_name) . "\n";
-		$loader_scripts .= "};\n";
-
 		if(!empty($this->customScript)) {
 			$loader_scripts .= "//cs:start\n";
 			foreach(array_diff_key($this->customScript,$this->blocked) as $script) {
@@ -84,6 +82,7 @@ JAVASCRIPT;
 			}
 			$loader_scripts .= "//cs:end\n";
 		}
+		$loader_scripts .= "};\n";
 
 		if(empty($scripts)) {
 			// No scripts, notify custom scripts
