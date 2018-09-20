@@ -73,16 +73,17 @@ JAVASCRIPT;
 		// Hit up custom scripts after the requirements_bundle has loaded
 		$loader_scripts .= "<script>\n";
 		$loader_scripts .= "var loadjs_ready_{$this->bundle_name} = function() {\n";
-
 		// dispatch the event when the bundle_name has loaded successfully
 		$loader_scripts .= $this->bundleDispatch($this->bundle_name) . "\n";
-
-		if($this->customScript) {
-			foreach(array_diff_key($this->customScript,$this->blocked) as $script) {
-				$loader_scripts .= "{$script}\n\n";
-			}
-		}
 		$loader_scripts .= "};\n";
+
+		if(!empty($this->customScript)) {
+			$loader_scripts .= "//cs:start\n";
+			foreach(array_diff_key($this->customScript,$this->blocked) as $script) {
+				$loader_scripts .= "{$script}\n";
+			}
+			$loader_scripts .= "//cs:end\n";
+		}
 
 		if(empty($scripts)) {
 			// No scripts, notify custom scripts
