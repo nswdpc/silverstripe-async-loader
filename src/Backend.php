@@ -66,7 +66,7 @@ JAVASCRIPT;
      */
     private function asyncLoader()
     {
-        $script = "<script>" . self::LOADER_SCRIPT . "</script>\n";
+        $script = self::LOADER_SCRIPT;
         return $script;
     }
 
@@ -78,7 +78,6 @@ JAVASCRIPT;
     {
         $loader_scripts = "";
         // Hit up custom scripts after the requirements_bundle has loaded
-        $loader_scripts .= "<script>\n";
         $loader_scripts .= "var loadjs_ready_{$this->bundle_name} = function() {\n";
         // dispatch the event when the bundle_name has loaded successfully
         $loader_scripts .= $this->bundleDispatch($this->bundle_name) . "\n";
@@ -106,7 +105,6 @@ JAVASCRIPT;
             $loader_scripts .= "});\n";
         }
 
-        $loader_scripts .= "</script>\n";
         return $loader_scripts;
     }
 
@@ -119,7 +117,7 @@ JAVASCRIPT;
             return "";
         }
         // load all bundle scripts
-        $scripts = "<script>\n";
+        $scripts = "";
         foreach ($this->bundle_scripts as $bundle_name => $bundle) {
             if ($bundle_name == $this->bundle_name) {
                 throw new Exception("You cannot name a bundle '{$this->bundle_name}'");
@@ -135,7 +133,6 @@ JAVASCRIPT;
             //$loader_scripts .= ", before: function(path, elem) {}";
             $scripts .= "});\n";
         }
-        $scripts .= "</script>\n";
         return $scripts;
     }
 
@@ -147,7 +144,7 @@ JAVASCRIPT;
         if (empty($this->bundle_stylesheets)) {
             return "";
         }
-        $stylesheets = "<script>\n";
+        $stylesheets = "";
         foreach ($this->bundle_stylesheets as $bundle_name => $bundle) {
             if ($bundle_name == $this->bundle_name_css) {
                 throw new Exception("You cannot name a bundle '{$this->bundle_name_css}'");
@@ -162,7 +159,6 @@ JAVASCRIPT;
             $stylesheets .= "error: function(nf) {}\n";
             $stylesheets .= "});\n";
         }
-        $stylesheets = "</script>\n";
         return $stylesheets;
     }
 
@@ -183,7 +179,6 @@ JAVASCRIPT;
         ) {
             $head_requirements = '';
             $lazy_css_requirements = $css_requirements = '';
-            $script_requirements = '';
 
             // Combine files - updates $this->javascript and $this->css
             $this->processCombinedFiles();
@@ -194,14 +189,22 @@ JAVASCRIPT;
                 $script_paths[] = $this->pathForFile($file);
             }
 
+            $script_requirements = "<script>\n";
+
             // load the loader
-            $script_requirements = $this->asyncLoader();
+            $script_requirements .= $this->asyncLoader();
+
+            $script_requirements .= "\n\n";
 
             // load up required javascript
             $script_requirements .= $this->asyncScriptLoader($script_paths);
 
+            $script_requirements .= "\n";
+
             // Run any specific bundles that are declared
             $script_requirements .= $this->addBundleScripts();
+
+            $script_requirements .= "\n";
 
             // Blocking CSS by default
             foreach (array_diff_key($this->css, $this->blocked) as $file => $params) {
@@ -219,6 +222,8 @@ JAVASCRIPT;
 
             // and CSS bundles via loadjs
             $script_requirements .= $this->addBundleStylesheets();
+
+            $script_requirements .= "</script>";//end script requirements
 
             // inline CSS requirements are pushed to the <head>, after linked stylesheets
             foreach (array_diff_key($this->customCSS, $this->blocked) as $css) {
