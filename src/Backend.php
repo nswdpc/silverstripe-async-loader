@@ -45,18 +45,19 @@ LOADJS;
 
     /**
      * Returns some plain ol' Javascript that will dispatch an event when the named bundle has loaded
+     * IE does not support CustomEvent correctly
      */
     private function bundleDispatch($bundle, $error = false)
     {
         $event_name = "load_{$bundle}" . ($error ? "_error" : "");
         $dispatcher = <<<JAVASCRIPT
-try {
-    var event = new CustomEvent('$event_name', {bubbles: true, cancelable: true});
-} catch (e) {
-    var event = document.createEvent('Event');
-    event.initEvent('$event_name', true, true); //can bubble, and is cancellable
+if ( typeof window.CustomEvent === "function" ) {
+    var evt = new CustomEvent('$event_name');
+} else {
+    var evt = document.createEvent('CustomEvent');
+    evt.initCustomEvent('$event_name', true, true, null);
 }
-document.dispatchEvent(event);
+document.dispatchEvent(evt);
 JAVASCRIPT;
         return $dispatcher;
     }
@@ -82,11 +83,11 @@ JAVASCRIPT;
         // dispatch the event when the bundle_name has loaded successfully
         $loader_scripts .= $this->bundleDispatch($this->bundle_name) . "\n";
         if (!empty($this->customScript)) {
-            $loader_scripts .= "//cs:start\n";
+            //$loader_scripts .= "//cs:start\n";
             foreach (array_diff_key($this->customScript, $this->blocked) as $script) {
                 $loader_scripts .= "{$script}\n";
             }
-            $loader_scripts .= "//cs:end\n";
+            //$loader_scripts .= "//cs:end\n";
         }
         $loader_scripts .= "};\n";
 
@@ -100,7 +101,7 @@ JAVASCRIPT;
             $loader_scripts .= ", {\n";
             $loader_scripts .= "async: false,\n";
             $loader_scripts .= "success: function() { loadjs_ready_{$this->bundle_name}(); },\n";
-            $loader_scripts .= "error: function(nf) {}\n";
+            $loader_scripts .= "error: function(nf) { console.log('Not found:', nf); }\n";
             //$loader_scripts .= ",before: function(path, elem) {}";
             $loader_scripts .= "});\n";
         }
