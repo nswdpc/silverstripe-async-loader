@@ -1,9 +1,12 @@
 <?php
 namespace NSWDPC\AsyncLoader;
 
+use SilverStripe\View\Requirements;
 use Silverstripe\View\Requirements_Backend;
 use Silverstripe\Core\Convert;
+use SilverStripe\Core\Config\Config;
 use Exception;
+use DOMDocument;
 
 class Backend extends Requirements_Backend
 {
@@ -165,17 +168,29 @@ JAVASCRIPT;
 
     /**
      * Update the given HTML content with the appropriate include tags for the registered
-     * requirements. Needs to receive a valid HTML/XHTML template in the $content parameter,
+     * requirements. Needs to receive a valid HTML/XHTML template in the $html parameter,
      * including a head and body tag.
      *
-     * @param string $content      HTML content that has already been parsed from the $templateFile
+     * @param string $html      HTML content that has already been parsed from the $templateFile
      *                             through {@link SSViewer}
      * @return string HTML content augmented with the requirements tags
      */
-    public function includeInHTML($content)
+    public function includeInHTML($html)
     {
+
+        if($html === "") {
+            return "";
+        }
+
+        $use_domdocument = Config::inst()->get( Requirements::class, 'use_domdocument' );
+        if($use_domdocument) {
+            //use requirements insertion via DOMDocument
+            return $this->includeInHTMLViaDOMDocument($html);
+        }
+
+        $start = microtime(true);
         if (
-            (strpos($content, '</head>') !== false || strpos($content, '</head ') !== false)
+            (strpos($html, '</head>') !== false || strpos($html, '</head ') !== false)
             && ($this->css || $this->javascript || $this->customCSS || $this->customScript || $this->customHeadTags)
         ) {
             $head_requirements = '';
@@ -236,31 +251,153 @@ JAVASCRIPT;
             }
 
             // add scripts
-            if (strpos($content, self::LOADER_SCRIPT_PLACEHOLDER)) {
+            if (strpos($html, self::LOADER_SCRIPT_PLACEHOLDER)) {
                 // Attempt to replace the placeholder comment with our scripts
                 $script_requirements .= "<!-- :) -->";
-                $content = str_replace(self::LOADER_SCRIPT_PLACEHOLDER, $script_requirements, $content);
+                $html = str_replace(self::LOADER_SCRIPT_PLACEHOLDER, $script_requirements, $html);
             } else {
                 // No placeholder: push in prior to </body>
-                $content = preg_replace("/(<\/body[^>]*>)/i", $script_requirements . "\\1", $content);
+                $html = preg_replace("/(<\/body[^>]*>)/i", $script_requirements . "\\1", $html);
             }
 
             if ($lazy_css_requirements) {
                 // Lazy css requirements end up as <link> tags before the </body> - non critical CSS
-                $content = preg_replace("/(<\/body[^>]*>)/i", $lazy_css_requirements . "\\1", $content);
+                $html = preg_replace("/(<\/body[^>]*>)/i", $lazy_css_requirements . "\\1", $html);
             }
 
             if ($css_requirements) {
                 // Put standard CSS requirements at base of </head>
-                $content = preg_replace("/(<\/head>)/i", $css_requirements . "\\1", $content);
+                $html = preg_replace("/(<\/head>)/i", $css_requirements . "\\1", $html);
             }
 
             if ($head_requirements) {
                 // Put <head> requirements at base of </head>
-                $content = preg_replace("/(<\/head>)/i", $head_requirements . "\\1", $content);
+                $html = preg_replace("/(<\/head>)/i", $head_requirements . "\\1", $html);
             }
         }
 
-        return $content;
+        $end = microtime(true);
+        $time = round($end - $start, 7);
+        $html .= "<!-- {$time} -->\n";
+
+        return $html;
+    }
+
+    /**
+     * Use DOMDocument to insert requirements
+     * @param string $html
+     * @returns string HTML possibly with some requirements added
+     */
+    private function includeInHTMLViaDOMDocument($html) {
+
+        $start = microtime(true);
+        libxml_use_internal_errors(true);
+        $dom = new DOMDocument();
+        $dom->loadHTML( $html , LIBXML_HTML_NODEFDTD );
+
+        $head = $dom->getElementsByTagName('head')[0];
+        if(!$head) {
+            // no <head> in HTML provided
+            return $html;
+        }
+
+        $body = $dom->getElementsByTagName('body')[0];
+
+        // check for requirements
+        if ($this->css || $this->javascript || $this->customCSS || $this->customScript || $this->customHeadTags) {
+
+            $head_requirements = '';
+            $lazy_css_requirements = $css_requirements = '';
+
+            // Combine files - updates $this->javascript and $this->css
+            $this->processCombinedFiles();
+
+            // Collect script paths
+            $script_paths = [];
+            foreach (array_diff_key($this->javascript, $this->blocked) as $file => $dummy) {
+                $script_paths[] = $this->pathForFile($file);
+            }
+
+            $script_requirements = "<script>\n";
+
+            // load the loader
+            $script_requirements .= $this->asyncLoader();
+
+            $script_requirements .= "\n\n";
+
+            // load up required javascript
+            $script_requirements .= $this->asyncScriptLoader($script_paths);
+
+            $script_requirements .= "\n";
+
+            // Run any specific bundles that are declared
+            $script_requirements .= $this->addBundleScripts();
+
+            $script_requirements .= "\n";
+
+            // Blocking CSS by default
+            foreach (array_diff_key($this->css, $this->blocked) as $file => $params) {
+                $path = $this->pathForFile($file);
+                if ($path) {
+                    $media = (isset($params['media']) && !empty($params['media'])) ? " media=\"{$params['media']}\"" : "";
+
+                    if (isset($params['lazy'])) {
+                        $lazy_css_requirements .= "<link rel=\"stylesheet\" type=\"text/css\"{$media} href=\"$path\">\n";
+                    } else {
+                        $css_requirements .= "<link rel=\"stylesheet\" type=\"text/css\"{$media} href=\"$path\">\n";
+                    }
+                }
+            }
+
+            // and CSS bundles via loadjs
+            $script_requirements .= $this->addBundleStylesheets();
+
+            $script_requirements .= "</script>";//end script requirements
+
+            // inline CSS requirements are pushed to the <head>, after linked stylesheets
+            foreach (array_diff_key($this->customCSS, $this->blocked) as $css) {
+                $css_requirements .= "<style type=\"text/css\">\n$css\n</style>\n";
+            }
+
+            foreach (array_diff_key($this->customHeadTags, $this->blocked) as $customHeadTag) {
+                $head_requirements .= $customHeadTag . "\n";
+            }
+
+            $fragment = new DOMDocument();
+
+            if ($script_requirements) {
+                // add scripts
+                $fragment->loadHTML( $script_requirements, LIBXML_HTML_NODEFDTD );
+                $body->appendChild( $dom->importNode( $fragment->documentElement, true) );
+            }
+
+            if ($lazy_css_requirements) {
+                // Lazy css requirements end up as <link> tags before the </body> - non critical CSS
+                $fragment->loadHTML( $lazy_css_requirements, LIBXML_HTML_NODEFDTD );
+                $body->appendChild( $dom->importNode( $fragment->documentElement, true) );
+            }
+
+            if ($css_requirements) {
+                // Put standard CSS requirements at base of </head>
+                $fragment->loadHTML( $css_requirements, LIBXML_HTML_NODEFDTD );
+                $head->appendChild( $dom->importNode( $fragment->documentElement, true) );
+            }
+
+            if ($head_requirements) {
+                // Put <head> requirements at base of </head>
+                $fragment->loadHTML( $head_requirements, LIBXML_HTML_NODEFDTD );
+                $head->appendChild( $dom->importNode( $fragment->documentElement, true) );
+            }
+        }
+        $end = microtime(true);
+
+        $time = round($end - $start, 7);
+
+        $html = $dom->saveHTML();
+        libxml_clear_errors();
+
+        $html .= "<!-- {$time} -->\n";
+
+        return $html;
     }
 }

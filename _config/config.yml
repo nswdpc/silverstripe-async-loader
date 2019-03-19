@@ -1,0 +1,5 @@
+---
+name: async_requirements
+---
+Silverstripe\View\Requirements:
+  use_domdocument: true
