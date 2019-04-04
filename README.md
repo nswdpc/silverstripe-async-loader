@@ -86,7 +86,6 @@ It's fast, but ugly.
 
 > Refer to [Section 5](https://github.com/muicss/loadjs#documentation) of the loadjs documentation on CSS loading notes.
 
-
 ## Page placement
 
 If you wish, place the HTML comment ```<!-- asyncloader_script_requirements_placeholder -->``` in your page template where you would like JS requirements to be placed.
@@ -104,6 +103,6 @@ These are loaded prior to the closing head tag.
 
 ## Licences
 
-MIT
+BSD 3-Clause
 
 * loadjs is licensed under the MIT license: https://github.com/muicss/loadjs/blob/master/LICENSE.txt
