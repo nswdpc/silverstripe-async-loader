@@ -251,7 +251,7 @@ JAVASCRIPT;
             }
 
             // add scripts
-            if (strpos($html, self::LOADER_SCRIPT_PLACEHOLDER)) {
+            if (strpos($html, self::LOADER_SCRIPT_PLACEHOLDER) !== false) {
                 // Attempt to replace the placeholder comment with our scripts
                 $script_requirements .= "<!-- :) -->";
                 $html = str_replace(self::LOADER_SCRIPT_PLACEHOLDER, $script_requirements, $html);
@@ -278,7 +278,9 @@ JAVASCRIPT;
 
         $end = microtime(true);
         $time = round($end - $start, 7);
-        $html .= "<!-- {$time} -->\n";
+        if($add_async_timing = Config::inst()->get( Requirements::class, 'add_async_timing' )) {
+            $html .= "<!-- {$time} -->\n";
+        }
 
         return $html;
     }
@@ -396,7 +398,9 @@ JAVASCRIPT;
         $html = $dom->saveHTML();
         libxml_clear_errors();
 
-        $html .= "<!-- {$time} -->\n";
+        if($add_async_timing = Config::inst()->get( Requirements::class, 'add_async_timing' )) {
+            $html .= "<!-- {$time} -->\n";
+        }
 
         return $html;
     }
