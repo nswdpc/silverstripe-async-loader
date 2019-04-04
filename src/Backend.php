@@ -369,27 +369,36 @@ JAVASCRIPT;
 
             if ($script_requirements) {
                 // add scripts
-                $fragment->loadHTML( $script_requirements, LIBXML_HTML_NODEFDTD );
-                $body->appendChild( $dom->importNode( $fragment->documentElement, true) );
+                $fragment->loadHTML( $script_requirements, LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED );
+                foreach($fragment->getElementsByTagName('script') as $script) {
+                    $body->appendChild( $dom->importNode( $script, true) );
+                }
             }
 
             if ($lazy_css_requirements) {
                 // Lazy css requirements end up as <link> tags before the </body> - non critical CSS
-                $fragment->loadHTML( $lazy_css_requirements, LIBXML_HTML_NODEFDTD );
-                $body->appendChild( $dom->importNode( $fragment->documentElement, true) );
+                $fragment->loadHTML( $lazy_css_requirements, LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED );
+                foreach($fragment->getElementsByTagName('link') as $link) {
+                    $body->appendChild( $dom->importNode( $link, true) );
+                }
             }
 
             if ($css_requirements) {
                 // Put standard CSS requirements at base of </head>
-                $fragment->loadHTML( $css_requirements, LIBXML_HTML_NODEFDTD );
-                $head->appendChild( $dom->importNode( $fragment->documentElement, true) );
+                $fragment->loadHTML( $css_requirements, LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED);
+                foreach($fragment->getElementsByTagName('link') as $link) {
+                    $head->appendChild( $dom->importNode( $link, true) );
+                }
             }
 
             if ($head_requirements) {
                 // Put <head> requirements at base of </head>
-                $fragment->loadHTML( $head_requirements, LIBXML_HTML_NODEFDTD );
-                $head->appendChild( $dom->importNode( $fragment->documentElement, true) );
+                $fragment->loadHTML( $head_requirements, LIBXML_HTML_NODEFDTD | LIBXML_HTML_NOIMPLIED );
+                foreach($fragment->getElementsByTagName('*') as $node) {
+                    $head->appendChild( $dom->importNode( $node, true) );
+                }
             }
+
         }
         $end = microtime(true);
 
