@@ -263,7 +263,6 @@ JS;
             return "";
         }
 
-        $start = microtime(true);
         $use_domdocument = Config::inst()->get( Requirements::class, 'use_domdocument' );
         if($use_domdocument) {
             //use requirements insertion via DOMDocument
@@ -318,9 +317,6 @@ JS;
             }
 
         }
-
-        $html = $this->addTiming($html, $start);
-
         return $html;
     }
 
@@ -403,15 +399,6 @@ JS;
         $html = $dom->saveHTML();
         libxml_clear_errors();
 
-        return $html;
-    }
-
-    protected function addTiming($html, $start) {
-        if($add_async_timing = Config::inst()->get( Requirements::class, 'add_async_timing' )) {
-            $end = microtime(true);
-            $time = round($end - $start, 7);
-            $html .= "<!-- timing:{$time} -->\n";
-        }
         return $html;
     }
 
