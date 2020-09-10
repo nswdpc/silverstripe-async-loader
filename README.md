@@ -9,13 +9,26 @@ The goal is to make requirements loading light without blocking page load and to
 Supports Silverstripe 4.0+
 
 ## Usage example
-```
+
+
+In configuration:
+
+
+```php
+// /path/to/your/project/_config.php
 use SilverStripe\View\Requirements;
-use NSWDPC\AsyncLoader\Backend as AsyncRequirementsBackend;
+Requirements::set_backend( NSWDPC\AsyncLoader\Backend::create() );
 ```
 
-```
-$backend = new AsyncRequirementsBackend();
+
+In a specific controller:
+
+```php
+use SilverStripe\View\Requirements;
+
+// load
+
+$backend = NSWDPC\AsyncLoader\Backend::create();
 Requirements::set_backend($backend);
 
 // load requirements in the default bundle (blocking)
@@ -26,8 +39,9 @@ Requirements::javascript('//example.com/load_over_current_protocol.js');
 // block requirements as usual
 Requirements::block('/something_you_want_to_block.js');
 
-// create a specific bundle
+// create a specific bundle called 'fontawesome'
 $backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js']);
+
 ```
 
 ## Bundles
@@ -42,7 +56,7 @@ For backwards compatibility scripts loaded via ```Requirements::javascript``` ar
 Once all scripts are loaded, a callback ```loadjs_ready_requirements_bundle``` is fired and dispatches a DOM event ```load_requirements_bundle```
 
 Custom scripts that require a script to be loaded prior to firing can listen for this DOM event:
-```
+```javascript
 document.addEventListener('load_requirements_bundle', function(e) {
 	// custom script
 }
@@ -51,7 +65,7 @@ document.addEventListener('load_requirements_bundle', function(e) {
 ### Specific bundles
 
 Scripts that do not depend on anything loaded in a default bundle can be loaded in a non blocking way in their own bundle:
-```
+```php
 // load fontawesome
 $backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js']);
 ```
@@ -59,7 +73,7 @@ $backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js']);
 Optionally with a callback... if you need to do something after a bundle loads
 > See [Section 1](https://github.com/muicss/loadjs#documentation) of the loadjs documentation
 
-```
+```php
 // load fontawesome
 $backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js'], "console.log('fontawesome loaded!');");
 ```
@@ -67,20 +81,22 @@ $backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js'], "con
 You can include multiple scripts in the bundle
 > See [Section 2](https://github.com/muicss/loadjs#documentation) of the loadjs documentation
 
-```
+```php
 // load one and two asynchronously (two.js may load before one.js)
 $backend->bundle('fontawesome', ['/script/one.js','/script/two.js']);
 ```
 
 ## CSS
 
-CSS requirements are loaded in blocking mode by default within the ```<head>``` tag.
+CSS requirements are loaded in blocking mode by default within the `<head>` tag.
 
 You can alternatively load CSS in non-blocking mode via a backend bundle:
-```
+
+```php
 // load CSS without blocking
 $backend->bundle_css('css_bundle', ['path/to/style.css']);
 ```
+
 Be aware that unless you load in styles that set up a basic/acceptable above-the-fold layout, you will most likely get a FOUC until stylesheets loaded this way are applied.
 It's fast, but ugly.
 
@@ -88,7 +104,7 @@ It's fast, but ugly.
 
 ## Page placement
 
-If you wish, place the HTML comment ```<!-- asyncloader_script_requirements_placeholder -->``` in your page template where you would like JS requirements to be placed.
+If you wish, place the HTML comment `<!-- asyncloader_script_requirements_placeholder -->` in your page template where you would like JS requirements to be placed.
 The backend will replace this comment with the JS requirements found. If you do not do this, the JS requirements will be loaded before the closing body tag.
 
 ## Custom scripts

@@ -1,19 +1,31 @@
 <?php
 namespace NSWDPC\AsyncLoader;
 
+use SilverStripe\View\HTML;
+use SilverStripe\Control\Controller;
 use SilverStripe\View\Requirements;
 use Silverstripe\View\Requirements_Backend;
 use Silverstripe\Core\Convert;
 use SilverStripe\Core\Config\Config;
+use SilverStripe\Core\Config\Configurable;
 use Exception;
 use DOMDocument;
+use SilverStripe\Admin\LeftAndMain;
 
+
+/**
+ * Async Requirements backend using loadjs
+ * @author James
+ */
 class Backend extends Requirements_Backend
 {
-    const LOADER_URL = "https://cdnjs.cloudflare.com/ajax/libs/loadjs/3.6.0/loadjs.min.js";
+    use Configurable;
+
+    const LOADER_URL = "https://cdnjs.cloudflare.com/ajax/libs/loadjs/4.2.0/loadjs.min.js";
+    const LOADER_SRI_HASH = "sha512-kA5njTcOKIwpz6cEPl//I31UH3ivohgL+WSVjdO/iMQWbuzHqxuAdPjRvLEHXTa+M/4AtZNMI6aOEvBtOof7Iw==";
     // content of the above URL
     const LOADER_SCRIPT = <<<LOADJS
-loadjs=function(){var a=function(){},c={},u={},f={};function o(e,n){if(e){var t=f[e];if(u[e]=n,t)for(;t.length;)t[0](e,n),t.splice(0,1)}}function l(e,n){e.call&&(e={success:e}),n.length?(e.error||a)(n):(e.success||a)(e)}function h(t,r,s,i){var c,o,e=document,n=s.async,u=(s.numRetries||0)+1,f=s.before||a,l=t.replace(/^(css|img)!/,"");i=i||0,/(^css!|\.css$)/.test(t)?((o=e.createElement("link")).rel="stylesheet",o.href=l,(c="hideFocus"in o)&&o.relList&&(c=0,o.rel="preload",o.as="style")):/(^img!|\.(png|gif|jpg|svg)$)/.test(t)?(o=e.createElement("img")).src=l:((o=e.createElement("script")).src=t,o.async=void 0===n||n),!(o.onload=o.onerror=o.onbeforeload=function(e){var n=e.type[0];if(c)try{o.sheet.cssText.length||(n="e")}catch(e){18!=e.code&&(n="e")}if("e"==n){if((i+=1)<u)return h(t,r,s,i)}else if("preload"==o.rel&&"style"==o.as)return o.rel="stylesheet";r(t,n,e.defaultPrevented)})!==f(t,o)&&e.head.appendChild(o)}function t(e,n,t){var r,s;if(n&&n.trim&&(r=n),s=(r?t:n)||{},r){if(r in c)throw"LoadJS";c[r]=!0}function i(n,t){!function(e,r,n){var t,s,i=(e=e.push?e:[e]).length,c=i,o=[];for(t=function(e,n,t){if("e"==n&&o.push(e),"b"==n){if(!t)return;o.push(e)}--i||r(o)},s=0;s<c;s++)h(e[s],t,n)}(e,function(e){l(s,e),n&&l({success:n,error:t},e),o(r,e)},s)}if(s.returnPromise)return new Promise(i);i()}return t.ready=function(e,n){return function(e,t){e=e.push?e:[e];var n,r,s,i=[],c=e.length,o=c;for(n=function(e,n){n.length&&i.push(e),--o||t(i)};c--;)r=e[c],(s=u[r])?n(r,s):(f[r]=f[r]||[]).push(n)}(e,function(e){l(n,e)}),t},t.done=function(e){o(e,[])},t.reset=function(){c={},u={},f={}},t.isDefined=function(e){return e in c},t}();
+loadjs=function(){var h=function(){},c={},u={},f={};function o(e,n){if(e){var r=f[e];if(u[e]=n,r)for(;r.length;)r[0](e,n),r.splice(0,1)}}function l(e,n){e.call&&(e={success:e}),n.length?(e.error||h)(n):(e.success||h)(e)}function d(r,t,s,i){var c,o,e=document,n=s.async,u=(s.numRetries||0)+1,f=s.before||h,l=r.replace(/[\?|#].*$/,""),a=r.replace(/^(css|img)!/,"");i=i||0,/(^css!|\.css$)/.test(l)?((o=e.createElement("link")).rel="stylesheet",o.href=a,(c="hideFocus"in o)&&o.relList&&(c=0,o.rel="preload",o.as="style")):/(^img!|\.(png|gif|jpg|svg|webp)$)/.test(l)?(o=e.createElement("img")).src=a:((o=e.createElement("script")).src=r,o.async=void 0===n||n),!(o.onload=o.onerror=o.onbeforeload=function(e){var n=e.type[0];if(c)try{o.sheet.cssText.length||(n="e")}catch(e){18!=e.code&&(n="e")}if("e"==n){if((i+=1)<u)return d(r,t,s,i)}else if("preload"==o.rel&&"style"==o.as)return o.rel="stylesheet";t(r,n,e.defaultPrevented)})!==f(r,o)&&e.head.appendChild(o)}function r(e,n,r){var t,s;if(n&&n.trim&&(t=n),s=(t?r:n)||{},t){if(t in c)throw"LoadJS";c[t]=!0}function i(n,r){!function(e,t,n){var r,s,i=(e=e.push?e:[e]).length,c=i,o=[];for(r=function(e,n,r){if("e"==n&&o.push(e),"b"==n){if(!r)return;o.push(e)}--i||t(o)},s=0;s<c;s++)d(e[s],r,n)}(e,function(e){l(s,e),n&&l({success:n,error:r},e),o(t,e)},s)}if(s.returnPromise)return new Promise(i);i()}return r.ready=function(e,n){return function(e,r){e=e.push?e:[e];var n,t,s,i=[],c=e.length,o=c;for(n=function(e,n){n.length&&i.push(e),--o||r(i)};c--;)t=e[c],(s=u[t])?n(t,s):(f[t]=f[t]||[]).push(n)}(e,function(e){l(n,e)}),r},r.done=function(e){o(e,[])},r.reset=function(){c={},u={},f={}},r.isDefined=function(e){return e in c},r}();
 LOADJS;
 
     const LOADER_SCRIPT_PLACEHOLDER = "<!-- asyncloader_script_requirements_placeholder -->";// put this comment where you want scripts to load
@@ -24,15 +36,35 @@ LOADJS;
     protected $bundle_scripts;
     protected $bundle_stylesheets = [];
 
+    private static $algo = "sha512";
+    private static $use_in_leftandmain = false;
+
     /**
      * Stores a JS bundle linked to $bundle_name
+     * @param string $bundle_name the name of the bundle
+     * @param array $scripts the scripts in the bundle
+     * @param string  $success javascript used in the success callback
      */
     public function bundle($bundle_name, array $scripts, $success = '')
     {
         if (!$bundle_name) {
             $bundle_name = "bundle_" . md5(implode(",", $scripts));
         }
-        $this->bundle_scripts[$bundle_name] = [ 'scripts' => $scripts, 'success' => $success ];
+        $bundle_scripts = [];
+        foreach($scripts as $k => $script) {
+            if(is_int($k)) {
+                // deprecated: make key the path
+                $bundle_scripts[$script] = [];
+            } else {
+                // key is the path, able to provide options
+                $bundle_scripts[$k] = $script;
+            }
+        }
+        $this->bundle_scripts[$bundle_name] = [
+            'scripts' => $bundle_scripts,
+            'success' => $success,
+            'error' => ''
+        ];
     }
 
     /**
@@ -76,21 +108,21 @@ JAVASCRIPT;
 
     /**
      * Load the scripts requested via Requirements::javascript, in the bundle 'requirements_bundle'
+     * @param array $scripts keys are the script paths, values are script options
      * @note to avoid massive refactor, these scripts are loaded in the order of requirement with async set to false - loadjs will load them in parallel but executee them in series
      */
-    private function asyncScriptLoader($scripts)
+    private function asyncScriptLoader(array $scripts)
     {
+
         $loader_scripts = "";
         // Hit up custom scripts after the requirements_bundle has loaded
         $loader_scripts .= "var loadjs_ready_{$this->bundle_name} = function() {\n";
         // dispatch the event when the bundle_name has loaded successfully
         $loader_scripts .= $this->bundleDispatch($this->bundle_name) . "\n";
         if (!empty($this->customScript)) {
-            //$loader_scripts .= "//cs:start\n";
             foreach (array_diff_key($this->customScript, $this->blocked) as $script) {
                 $loader_scripts .= "{$script}\n";
             }
-            //$loader_scripts .= "//cs:end\n";
         }
         $loader_scripts .= "};\n";
 
@@ -98,22 +130,28 @@ JAVASCRIPT;
             // No scripts, notify custom scripts
             $loader_scripts .= "loadjs_ready_{$this->bundle_name}();\n";
         } else {
-            $loader_scripts .= "loadjs(\n";
-            $loader_scripts .= json_encode($scripts, JSON_UNESCAPED_SLASHES);
-            $loader_scripts .= ", '{$this->bundle_name}'";
-            $loader_scripts .= ", {\n";
-            $loader_scripts .= "async: false,\n";
-            $loader_scripts .= "success: function() { loadjs_ready_{$this->bundle_name}(); },\n";
-            $loader_scripts .= "error: function(nf) { console.log('Not found:', nf); }\n";
-            //$loader_scripts .= ",before: function(path, elem) {}";
-            $loader_scripts .= "});\n";
+            $success= "loadjs_ready_{$this->bundle_name}();";
+            $error = "console.log('Not found:', nf);";
+            $loader_scripts .= $this->loadJsBundle($scripts, $this->bundle_name, $success, $error);
         }
 
         return $loader_scripts;
     }
 
     /**
-     * Include any specific script bundles that are found
+     * Include any specific script bundles of scripts
+     * You can create a bundle like such:
+     *     $backend = Requirements::backend();
+     *     $backend->bundle(
+     *      'threejs',
+     *      [
+     *          'https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js' => [
+     *              'integrity' => 'sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==',
+     *              'crossorigin' => 'anonymous'
+     *          ]
+     *      ]
+     *     );
+     *
      */
     private function addBundleScripts()
     {
@@ -127,17 +165,44 @@ JAVASCRIPT;
                 throw new Exception("You cannot name a bundle '{$this->bundle_name}'");
             }
             $success = isset($bundle['success']) ? $bundle['success'] : '';
-            $name = json_encode($bundle_name);
-            $scripts .= "loadjs(\n";
-            $scripts .= json_encode($bundle['scripts'], JSON_UNESCAPED_SLASHES);
-            $scripts .= ", " . $name;
-            $scripts .= ", {\n";
-            $scripts .= "success: function() { {$bundle['success']} },\n";
-            $scripts .= "error: function(nf) {}\n";
-            //$loader_scripts .= ", before: function(path, elem) {}";
-            $scripts .= "});\n";
+            $error = isset($bundle['error']) ? $bundle['error'] : '';
+            $scripts .= $this->loadJsBundle($bundle['scripts'], $bundle_name, $success, $error);
         }
         return $scripts;
+    }
+
+    /**
+     * Loads a bundle of scripts using loadjs
+     */
+    protected function loadJsBundle(array $scripts, $bundle_name, $success = "", $error = "") {
+        $script_paths = array_keys($scripts);
+        $encoded_scripts = json_encode($scripts, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+        $encoded_script_paths = json_encode($script_paths, JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+        $loader = "<!-- bundle start -->\n";
+        $loader .= "var loadjs_script_{$bundle_name} = {$encoded_scripts};\n";
+        $loader .= "loadjs( {$encoded_script_paths} , '{$bundle_name}', {\n";
+        $loader .= "async: false,\n";
+        $loader .= <<<JS
+before: function(path, el) {
+    if(loadjs_script_{$bundle_name}[path].integrity) {
+        el.integrity = loadjs_script_{$bundle_name}[path].integrity;
+    }
+    if(loadjs_script_{$bundle_name}[path].crossorigin) {
+        el.crossOrigin = loadjs_script_{$bundle_name}[path].crossorigin;
+    }
+},
+JS;
+
+        if($success) {
+            $loader .= "success: function() { {$success} },\n";
+        }
+        if($error) {
+            $loader .= "error: function(nf) { {$error} }\n";
+        }
+        $loader .= "});\n";
+        $loader .= "<!-- bundle end -->\n";
+
+        return $loader;
     }
 
     /**
@@ -171,116 +236,90 @@ JAVASCRIPT;
      * requirements. Needs to receive a valid HTML/XHTML template in the $html parameter,
      * including a head and body tag.
      *
-     * @param string $html      HTML content that has already been parsed from the $templateFile
+     * @param string $html HTML content that has already been parsed from the $templateFile
      *                             through {@link SSViewer}
      * @return string HTML content augmented with the requirements tags
      */
     public function includeInHTML($html)
     {
 
+        /*
+        if(!$this->config()->get('use_in_leftandmain')) {
+            try {
+                $controller = Controller::curr();
+                if($controller && $controller instanceof LeftAndMain) {
+                    return parent::includeInHTML($html);
+                }
+            } catch (\Exception $e) {
+            }
+        }
+        */
+
+        // cut out whitespace
+        $html = trim($html);
+
+        // Bail early if no HTML at all
         if($html === "") {
             return "";
         }
 
+        $start = microtime(true);
         $use_domdocument = Config::inst()->get( Requirements::class, 'use_domdocument' );
         if($use_domdocument) {
             //use requirements insertion via DOMDocument
-            return $this->includeInHTMLViaDOMDocument($html);
-        }
+            $html = $this->includeInHTMLViaDOMDocument($html);
+        } else {
 
-        $start = microtime(true);
-        if (
-            (strpos($html, '</head>') !== false || strpos($html, '</head ') !== false)
-            && ($this->css || $this->javascript || $this->customCSS || $this->customScript || $this->customHeadTags)
-        ) {
-            $head_requirements = '';
-            $lazy_css_requirements = $css_requirements = '';
+            if (
+                (strpos($html, '</head>') !== false || strpos($html, '</head ') !== false)
+                && ($this->css || $this->javascript || $this->customCSS || $this->customScript || $this->customHeadTags)
+            ) {
 
-            // Combine files - updates $this->javascript and $this->css
-            $this->processCombinedFiles();
+                // Combine files - updates $this->javascript and $this->css
+                $this->processCombinedFiles();
 
-            // Collect script paths
-            $script_paths = [];
-            foreach (array_diff_key($this->javascript, $this->blocked) as $file => $dummy) {
-                $script_paths[] = $this->pathForFile($file);
-            }
+                // Blocking CSS by default
+                $lazy_css_requirements = $css_requirements = '';
+                $this->applyLinkTags($lazy_css_requirements, $css_requirements);
 
-            $script_requirements = "<script>\n";
+                // script requirements
+                $script_requirements = $this->applyScriptTags();
 
-            // load the loader
-            $script_requirements .= $this->asyncLoader();
+                // inline styles
+                $css_requirements = $this->applyStyleTags($css_requirements);
 
-            $script_requirements .= "\n\n";
+                // custom head tags
+                $head_requirements = $this->applyHeadTags();
 
-            // load up required javascript
-            $script_requirements .= $this->asyncScriptLoader($script_paths);
+                // add scripts
+                if (strpos($html, self::LOADER_SCRIPT_PLACEHOLDER) !== false) {
+                    // Attempt to replace the placeholder comment with our scripts
+                    $script_requirements .= "<!-- :) -->";
+                    $html = str_replace(self::LOADER_SCRIPT_PLACEHOLDER, $script_requirements, $html);
+                } else {
+                    // No placeholder: push in prior to </body>
+                    $html = preg_replace("/(<\/body[^>]*>)/i", $script_requirements . "\\1", $html);
+                }
 
-            $script_requirements .= "\n";
+                if ($lazy_css_requirements) {
+                    // Lazy css requirements end up as <link> tags before the </body> - non critical CSS
+                    $html = preg_replace("/(<\/body[^>]*>)/i", $lazy_css_requirements . "\\1", $html);
+                }
 
-            // Run any specific bundles that are declared
-            $script_requirements .= $this->addBundleScripts();
+                if ($css_requirements) {
+                    // Put standard CSS requirements at base of </head>
+                    $html = preg_replace("/(<\/head>)/i", $css_requirements . "\\1", $html);
+                }
 
-            $script_requirements .= "\n";
-
-            // Blocking CSS by default
-            foreach (array_diff_key($this->css, $this->blocked) as $file => $params) {
-                $path = $this->pathForFile($file);
-                if ($path) {
-                    $media = (isset($params['media']) && !empty($params['media'])) ? " media=\"{$params['media']}\"" : "";
-
-                    if (isset($params['lazy'])) {
-                        $lazy_css_requirements .= "<link rel=\"stylesheet\" type=\"text/css\"{$media} href=\"$path\" />\n";
-                    } else {
-                        $css_requirements .= "<link rel=\"stylesheet\" type=\"text/css\"{$media} href=\"$path\" />\n";
-                    }
+                if ($head_requirements) {
+                    // Put <head> requirements at base of </head>
+                    $html = preg_replace("/(<\/head>)/i", $head_requirements . "\\1", $html);
                 }
             }
 
-            // and CSS bundles via loadjs
-            $script_requirements .= $this->addBundleStylesheets();
-
-            $script_requirements .= "</script>";//end script requirements
-
-            // inline CSS requirements are pushed to the <head>, after linked stylesheets
-            foreach (array_diff_key($this->customCSS, $this->blocked) as $css) {
-                $css_requirements .= "<style type=\"text/css\">\n$css\n</style>\n";
-            }
-
-            foreach (array_diff_key($this->customHeadTags, $this->blocked) as $customHeadTag) {
-                $head_requirements .= $customHeadTag . "\n";
-            }
-
-            // add scripts
-            if (strpos($html, self::LOADER_SCRIPT_PLACEHOLDER) !== false) {
-                // Attempt to replace the placeholder comment with our scripts
-                $script_requirements .= "<!-- :) -->";
-                $html = str_replace(self::LOADER_SCRIPT_PLACEHOLDER, $script_requirements, $html);
-            } else {
-                // No placeholder: push in prior to </body>
-                $html = preg_replace("/(<\/body[^>]*>)/i", $script_requirements . "\\1", $html);
-            }
-
-            if ($lazy_css_requirements) {
-                // Lazy css requirements end up as <link> tags before the </body> - non critical CSS
-                $html = preg_replace("/(<\/body[^>]*>)/i", $lazy_css_requirements . "\\1", $html);
-            }
-
-            if ($css_requirements) {
-                // Put standard CSS requirements at base of </head>
-                $html = preg_replace("/(<\/head>)/i", $css_requirements . "\\1", $html);
-            }
-
-            if ($head_requirements) {
-                // Put <head> requirements at base of </head>
-                $html = preg_replace("/(<\/head>)/i", $head_requirements . "\\1", $html);
-            }
         }
 
-        $end = microtime(true);
-        $time = round($end - $start, 7);
-        if($add_async_timing = Config::inst()->get( Requirements::class, 'add_async_timing' )) {
-            $html .= "<!-- {$time} -->\n";
-        }
+        $html = $this->addTiming($html, $start);
 
         return $html;
     }
@@ -292,7 +331,8 @@ JAVASCRIPT;
      */
     private function includeInHTMLViaDOMDocument($html) {
 
-        $start = microtime(true);
+        $html = trim($html);
+
         libxml_use_internal_errors(true);
         $dom = new DOMDocument();
         $dom->loadHTML( $html , LIBXML_HTML_NODEFDTD );
@@ -308,62 +348,21 @@ JAVASCRIPT;
         // check for requirements
         if ($this->css || $this->javascript || $this->customCSS || $this->customScript || $this->customHeadTags) {
 
-            $head_requirements = '';
-            $lazy_css_requirements = $css_requirements = '';
-
             // Combine files - updates $this->javascript and $this->css
             $this->processCombinedFiles();
 
-            // Collect script paths
-            $script_paths = [];
-            foreach (array_diff_key($this->javascript, $this->blocked) as $file => $dummy) {
-                $script_paths[] = $this->pathForFile($file);
-            }
+            // Apply tags
+            $lazy_css_requirements = $css_requirements = '';
+            $this->applyLinkTags($lazy_css_requirements, $css_requirements);
 
-            $script_requirements = "<script>\n";
+            // script requirements
+            $script_requirements = $this->applyScriptTags();
 
-            // load the loader
-            $script_requirements .= $this->asyncLoader();
+            // Apply inline styles
+            $css_requirements = $this->applyStyleTags($css_requirements);
 
-            $script_requirements .= "\n\n";
-
-            // load up required javascript
-            $script_requirements .= $this->asyncScriptLoader($script_paths);
-
-            $script_requirements .= "\n";
-
-            // Run any specific bundles that are declared
-            $script_requirements .= $this->addBundleScripts();
-
-            $script_requirements .= "\n";
-
-            // Blocking CSS by default
-            foreach (array_diff_key($this->css, $this->blocked) as $file => $params) {
-                $path = $this->pathForFile($file);
-                if ($path) {
-                    $media = (isset($params['media']) && !empty($params['media'])) ? " media=\"{$params['media']}\"" : "";
-
-                    if (isset($params['lazy'])) {
-                        $lazy_css_requirements .= "<link rel=\"stylesheet\" type=\"text/css\"{$media} href=\"$path\">\n";
-                    } else {
-                        $css_requirements .= "<link rel=\"stylesheet\" type=\"text/css\"{$media} href=\"$path\">\n";
-                    }
-                }
-            }
-
-            // and CSS bundles via loadjs
-            $script_requirements .= $this->addBundleStylesheets();
-
-            $script_requirements .= "</script>";//end script requirements
-
-            // inline CSS requirements are pushed to the <head>, after linked stylesheets
-            foreach (array_diff_key($this->customCSS, $this->blocked) as $css) {
-                $css_requirements .= "<style type=\"text/css\">\n$css\n</style>\n";
-            }
-
-            foreach (array_diff_key($this->customHeadTags, $this->blocked) as $customHeadTag) {
-                $head_requirements .= $customHeadTag . "\n";
-            }
+            // custom head tags
+            $head_requirements = $this->applyHeadTags();
 
             $fragment = new DOMDocument();
 
@@ -400,17 +399,149 @@ JAVASCRIPT;
             }
 
         }
-        $end = microtime(true);
-
-        $time = round($end - $start, 7);
 
         $html = $dom->saveHTML();
         libxml_clear_errors();
 
+        return $html;
+    }
+
+    protected function addTiming($html, $start) {
         if($add_async_timing = Config::inst()->get( Requirements::class, 'add_async_timing' )) {
-            $html .= "<!-- {$time} -->\n";
+            $end = microtime(true);
+            $time = round($end - $start, 7);
+            $html .= "<!-- timing:{$time} -->\n";
+        }
+        return $html;
+    }
+
+    /**
+     * Apply script tags
+     * @return string
+     */
+    protected function applyScriptTags() {
+
+        // Collect script paths
+        $script_paths = [];
+
+        foreach (array_diff_key($this->javascript, $this->blocked) as $file => $options) {
+            $script_paths[$this->pathForFile($file)] = $options;
         }
 
-        return $html;
+        // load the loader
+        $async_script = $this->asyncLoader();
+        $async_script .= "\n\n";
+
+        // load up required javascript
+        $async_script .= $this->asyncScriptLoader($script_paths);
+        $async_script .= "\n";
+
+        // Run any specific bundles that are declared, including the default one
+        $async_script .= $this->addBundleScripts();
+        $async_script .= "\n";
+
+        // and CSS bundles via loadjs
+        $async_script .= $this->addBundleStylesheets();
+
+        // remove whitespace
+        $async_script = trim($async_script);
+
+        // register the script
+        Requirements::customScript($async_script, "async_script_loading");
+
+        // SRI hash
+        $attributes = [];
+        $attributes['crossorigin'] = 'anonymous';
+        $attributes['integrity'] = $this->createSubResourceIntegrityHash( $async_script );
+        $tag = HTML::createTag('script', $attributes, $async_script);
+
+        return $tag;
+
+    }
+
+    /**
+     * Apply inline CSS requirements
+     * These are pushed to the <head>, after linked stylesheets
+     * @param string
+     * @return string
+     */
+    protected function applyStyleTags($css_requirements) {
+        foreach (array_diff_key($this->customCSS, $this->blocked) as $uniquenessID => $css) {
+            $attributes = [];
+            $attributes['type'] = 'text/css';
+            $tag = HTML::createTag('style', $attributes, $css);
+            $css_requirements .= $tag;
+        }
+        return $css_requirements;
+    }
+
+    /**
+     * Apply linked stylesheets
+     * @param string $lazy_css_requirements - CSS that is not blocking
+     * @param string $css_requirements - CSS that is blocking
+     * @return void
+     */
+    protected function applyLinkTags(&$lazy_css_requirements, &$css_requirements) {
+
+        $lazy_css_requirements = $css_requirements = "";
+
+        // Blocking CSS by default
+        foreach (array_diff_key($this->css, $this->blocked) as $file => $options) {
+            $path = $this->pathForFile($file);
+            if ($path) {
+
+                $attributes = [
+                    'rel' => 'stylesheet',
+                    'type' => 'text/css',
+                    'href' => $path
+                ];
+
+                if(isset($options['media'])) {
+                    $attributes['media'] = $options['media'];
+                }
+
+                if(isset($options['integrity'])) {
+                    $attributes['integrity'] = $options['integrity'];
+                }
+
+                if(isset($options['crossorigin'])) {
+                    $attributes['crossorigin'] = $options['crossorigin'];
+                }
+
+                $tag = HTML::createTag('link', $attributes, '');
+
+                if (isset($options['lazy'])) {
+                    $lazy_css_requirements .= $tag . "\n";
+                } else {
+                    $css_requirements .= $tag . "\n";
+                }
+            }
+        }
+    }
+
+    /**
+     * Apply custom head tags
+     * @return string
+     */
+    protected function applyHeadTags() {
+        $head_requirements = "";
+        foreach (array_diff_key($this->customHeadTags, $this->blocked) as $customHeadTag) {
+            $head_requirements .= $customHeadTag . "\n";
+        }
+        return $head_requirements = "";
+    }
+
+    /**
+     * Create an SRI hash based on a string
+     * @param string $string
+     * @return string
+     */
+    protected function createSubResourceIntegrityHash(string $string) {
+        $algo = $this->config()->get('algo');
+        $algos = ['sha256','sha384','sha512'];
+        if(!in_array($algo, $algos)) {
+            $algo = 'sha512';
+        }
+        return $algo . "-" . base64_encode( hash( $algo, $string, true) );
     }
 }

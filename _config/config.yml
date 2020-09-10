@@ -3,4 +3,13 @@ name: async_requirements
 ---
 Silverstripe\View\Requirements:
   use_domdocument: true
-  add_async_timing: false
+  add_async_timing: true
+---
+Name: async_backend_settings
+After:
+  - '#assetscore'
+---
+SilverStripe\Core\Injector\Injector:
+  NSWDPC\AsyncLoader\Backend:
+    properties:
+      AssetHandler: '%$SilverStripe\Assets\Storage\GeneratedAssetHandler'
