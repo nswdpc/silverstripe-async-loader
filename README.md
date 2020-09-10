@@ -39,8 +39,16 @@ Requirements::javascript('//example.com/load_over_current_protocol.js');
 // block requirements as usual
 Requirements::block('/something_you_want_to_block.js');
 
-// create a specific bundle called 'fontawesome'
-$backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js']);
+// Example: create a specific bundle called 'threejs'
+$backend->bundle(
+    'threejs', [
+        'https://cdnjs.cloudflare.com/ajax/libs/three.js/r120/three.min.js' => [
+            // options
+            'integrity' => 'sha512-kgjZw3xjgSUDy9lTU085y+UCVPz3lhxAtdOVkcO4O2dKl2VSBcNsQ9uMg/sXIM4SoOmCiYfyFO/n1/3GSXZtSg==',
+            'crossorigin' => 'anonymous'
+        ]
+    ]
+);
 
 ```
 
@@ -67,15 +75,28 @@ document.addEventListener('load_requirements_bundle', function(e) {
 Scripts that do not depend on anything loaded in a default bundle can be loaded in a non blocking way in their own bundle:
 ```php
 // load fontawesome
-$backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js']);
+$backend->bundle(
+    'fontawesome', [
+        'https://use.fontawesome.com/fa_code.js' => [
+            // options
+        ]
+    ]
+);
 ```
 
 Optionally with a callback... if you need to do something after a bundle loads
 > See [Section 1](https://github.com/muicss/loadjs#documentation) of the loadjs documentation
 
 ```php
-// load fontawesome
-$backend->bundle('fontawesome', ['https://use.fontawesome.com/fa_code.js'], "console.log('fontawesome loaded!');");
+// load fontawesome bundle
+$backend->bundle(
+    'fontawesome', [
+        'https://use.fontawesome.com/fa_code.js' => [
+            // options
+        ]
+    ],
+    "console.log('fontawesome loaded!');" // success
+);
 ```
 
 You can include multiple scripts in the bundle
@@ -83,7 +104,17 @@ You can include multiple scripts in the bundle
 
 ```php
 // load one and two asynchronously (two.js may load before one.js)
-$backend->bundle('fontawesome', ['/script/one.js','/script/two.js']);
+$backend->bundle(
+    'fontawesome', [
+        '/script/one.js' => [
+            // options
+        ],
+        '/script/two.js' => [
+            // options
+        ]
+    ],
+    "console.log('one and two loaded!');"// success callback javascript
+);
 ```
 
 ## CSS
@@ -94,7 +125,11 @@ You can alternatively load CSS in non-blocking mode via a backend bundle:
 
 ```php
 // load CSS without blocking
-$backend->bundle_css('css_bundle', ['path/to/style.css']);
+$backend->bundle_css(
+    'css_bundle', [
+        'path/to/style.css'
+    ]
+);
 ```
 
 Be aware that unless you load in styles that set up a basic/acceptable above-the-fold layout, you will most likely get a FOUC until stylesheets loaded this way are applied.
